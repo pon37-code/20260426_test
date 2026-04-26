@@ -4,115 +4,268 @@
   <meta charset="UTF-8">
   <title>タイマー</title>
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #fff;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 32px;
+      padding: 48px 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      font-weight: 400;
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 220px;
+      height: 220px;
+    }
+
+    svg.ring {
+      width: 220px;
+      height: 220px;
+      transform: rotate(-90deg);
+    }
+
+    .ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.08);
+      stroke-width: 10;
+    }
+
+    .ring-progress {
+      fill: none;
+      stroke: url(#grad);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 628;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 0.9s linear;
+    }
+
+    .ring-center {
+      position: absolute;
+      inset: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
-      background: #1a1a2e;
-      color: #eee;
     }
-    h1 { font-size: 2rem; margin-bottom: 1rem; }
-    .display {
-      font-size: 5rem;
-      font-weight: bold;
-      letter-spacing: 4px;
-      margin: 1rem 0;
+
+    #display {
+      font-size: 3.6rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      line-height: 1;
     }
+
+    #doneMsg {
+      font-size: 0.85rem;
+      color: #ff6b6b;
+      letter-spacing: 2px;
+      min-height: 1.2em;
+      margin-top: 4px;
+    }
+
     .inputs {
       display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      gap: 24px;
     }
-    .inputs label { font-size: 0.9rem; color: #aaa; }
-    .inputs input {
-      width: 60px;
-      font-size: 1.2rem;
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+    }
+
+    .input-group input {
+      width: 72px;
+      padding: 10px 0;
       text-align: center;
-      padding: 4px;
-      border-radius: 6px;
-      border: 1px solid #555;
-      background: #2a2a4a;
-      color: #eee;
+      font-size: 1.6rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.2s;
     }
-    .buttons { display: flex; gap: 1rem; }
+
+    .input-group input:focus {
+      border-color: rgba(130,100,255,0.7);
+    }
+
+    .sep {
+      font-size: 2rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.3);
+      align-self: center;
+      padding-top: 18px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 14px;
+    }
+
     button {
-      padding: 12px 28px;
-      font-size: 1rem;
+      padding: 14px 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
       border: none;
-      border-radius: 8px;
+      border-radius: 50px;
       cursor: pointer;
-      font-weight: bold;
+      transition: transform 0.1s, opacity 0.2s;
     }
-    #startBtn { background: #4caf50; color: #fff; }
-    #stopBtn  { background: #f44336; color: #fff; }
-    #resetBtn { background: #555; color: #eee; }
-    .done { color: #f44336; font-size: 1.5rem; margin-top: 1rem; }
+
+    button:active { transform: scale(0.96); }
+
+    #startBtn {
+      background: linear-gradient(135deg, #7f5af0, #2cb67d);
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(127,90,240,0.4);
+    }
+
+    #stopBtn {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    #resetBtn {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .pulsing { animation: pulse 1s ease-in-out infinite; }
   </style>
 </head>
 <body>
-  <h1>タイマー</h1>
-  <div class="display" id="display">00:00</div>
+<div class="card">
+  <h1>Timer</h1>
+
+  <div class="ring-wrap">
+    <svg class="ring" viewBox="0 0 220 220">
+      <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#7f5af0"/>
+          <stop offset="100%" stop-color="#2cb67d"/>
+        </linearGradient>
+      </defs>
+      <circle class="ring-bg" cx="110" cy="110" r="100"/>
+      <circle class="ring-progress" id="ring" cx="110" cy="110" r="100"/>
+    </svg>
+    <div class="ring-center">
+      <div id="display">00:00</div>
+      <div id="doneMsg"></div>
+    </div>
+  </div>
+
   <div class="inputs">
-    <div>
-      <label>分</label><br>
+    <div class="input-group">
+      <label>分</label>
       <input type="number" id="minutes" value="1" min="0" max="99">
     </div>
-    <div>
-      <label>秒</label><br>
+    <div class="sep">:</div>
+    <div class="input-group">
+      <label>秒</label>
       <input type="number" id="seconds" value="0" min="0" max="59">
     </div>
   </div>
+
   <div class="buttons">
-    <button id="startBtn" onclick="start()">スタート</button>
-    <button id="stopBtn"  onclick="stop()">ストップ</button>
-    <button id="resetBtn" onclick="reset()">リセット</button>
+    <button id="startBtn" onclick="start()">▶ Start</button>
+    <button id="stopBtn"  onclick="stop()">⏸ Stop</button>
+    <button id="resetBtn" onclick="reset()">↺ Reset</button>
   </div>
-  <div class="done" id="doneMsg"></div>
+</div>
 
-  <script>
-    let remaining = 0;
-    let timer = null;
+<script>
+  const CIRCUMFERENCE = 2 * Math.PI * 100;
+  let remaining = 0, total = 0, timer = null;
 
-    function format(sec) {
-      const m = String(Math.floor(sec / 60)).padStart(2, '0');
-      const s = String(sec % 60).padStart(2, '0');
-      return `${m}:${s}`;
+  function format(sec) {
+    return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+  }
+
+  function setRing(ratio) {
+    document.getElementById('ring').style.strokeDashoffset = CIRCUMFERENCE * (1 - ratio);
+  }
+
+  function start() {
+    if (timer) return;
+    if (remaining === 0) {
+      total = parseInt(document.getElementById('minutes').value||0)*60
+            + parseInt(document.getElementById('seconds').value||0);
+      remaining = total;
     }
-
-    function start() {
-      if (timer) return;
-      if (remaining === 0) {
-        remaining = parseInt(document.getElementById('minutes').value || 0) * 60
-                  + parseInt(document.getElementById('seconds').value || 0);
+    if (remaining <= 0) return;
+    document.getElementById('doneMsg').textContent = '';
+    document.getElementById('display').classList.remove('pulsing');
+    timer = setInterval(() => {
+      remaining--;
+      document.getElementById('display').textContent = format(remaining);
+      setRing(total > 0 ? remaining / total : 0);
+      if (remaining <= 0) {
+        clearInterval(timer); timer = null;
+        document.getElementById('doneMsg').textContent = '⏰ 時間です！';
+        document.getElementById('display').classList.add('pulsing');
       }
-      if (remaining <= 0) return;
-      document.getElementById('doneMsg').textContent = '';
-      timer = setInterval(() => {
-        remaining--;
-        document.getElementById('display').textContent = format(remaining);
-        if (remaining <= 0) {
-          clearInterval(timer);
-          timer = null;
-          document.getElementById('doneMsg').textContent = '⏰ 時間です！';
-        }
-      }, 1000);
-    }
+    }, 1000);
+  }
 
-    function stop() {
-      clearInterval(timer);
-      timer = null;
-    }
+  function stop() {
+    clearInterval(timer); timer = null;
+  }
 
-    function reset() {
-      stop();
-      remaining = 0;
-      document.getElementById('display').textContent = '00:00';
-      document.getElementById('doneMsg').textContent = '';
-    }
-  </script>
+  function reset() {
+    stop();
+    remaining = 0; total = 0;
+    document.getElementById('display').textContent = '00:00';
+    document.getElementById('display').classList.remove('pulsing');
+    document.getElementById('doneMsg').textContent = '';
+    setRing(1);
+  }
+
+  setRing(1);
+</script>
 </body>
 </html>
