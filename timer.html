@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>タイマー</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    h1 { font-size: 2rem; margin-bottom: 1rem; }
+    .display {
+      font-size: 5rem;
+      font-weight: bold;
+      letter-spacing: 4px;
+      margin: 1rem 0;
+    }
+    .inputs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .inputs label { font-size: 0.9rem; color: #aaa; }
+    .inputs input {
+      width: 60px;
+      font-size: 1.2rem;
+      text-align: center;
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background: #2a2a4a;
+      color: #eee;
+    }
+    .buttons { display: flex; gap: 1rem; }
+    button {
+      padding: 12px 28px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #startBtn { background: #4caf50; color: #fff; }
+    #stopBtn  { background: #f44336; color: #fff; }
+    #resetBtn { background: #555; color: #eee; }
+    .done { color: #f44336; font-size: 1.5rem; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>タイマー</h1>
+  <div class="display" id="display">00:00</div>
+  <div class="inputs">
+    <div>
+      <label>分</label><br>
+      <input type="number" id="minutes" value="1" min="0" max="99">
+    </div>
+    <div>
+      <label>秒</label><br>
+      <input type="number" id="seconds" value="0" min="0" max="59">
+    </div>
+  </div>
+  <div class="buttons">
+    <button id="startBtn" onclick="start()">スタート</button>
+    <button id="stopBtn"  onclick="stop()">ストップ</button>
+    <button id="resetBtn" onclick="reset()">リセット</button>
+  </div>
+  <div class="done" id="doneMsg"></div>
+
+  <script>
+    let remaining = 0;
+    let timer = null;
+
+    function format(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function start() {
+      if (timer) return;
+      if (remaining === 0) {
+        remaining = parseInt(document.getElementById('minutes').value || 0) * 60
+                  + parseInt(document.getElementById('seconds').value || 0);
+      }
+      if (remaining <= 0) return;
+      document.getElementById('doneMsg').textContent = '';
+      timer = setInterval(() => {
+        remaining--;
+        document.getElementById('display').textContent = format(remaining);
+        if (remaining <= 0) {
+          clearInterval(timer);
+          timer = null;
+          document.getElementById('doneMsg').textContent = '⏰ 時間です！';
+        }
+      }, 1000);
+    }
+
+    function stop() {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    function reset() {
+      stop();
+      remaining = 0;
+      document.getElementById('display').textContent = '00:00';
+      document.getElementById('doneMsg').textContent = '';
+    }
+  </script>
+</body>
+</html>
