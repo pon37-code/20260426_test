@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ランダムポケモン図鑑</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      color: #fff;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+      text-shadow: 0 0 20px rgba(100, 180, 255, 0.6);
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      padding: 36px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s;
+    }
+
+    .card.loading { opacity: 0.4; }
+
+    .pokemon-id {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 4px;
+    }
+
+    .pokemon-name {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+      text-shadow: 0 0 12px rgba(100, 200, 255, 0.5);
+    }
+
+    .pokemon-img {
+      width: 200px;
+      height: 200px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 16px rgba(100, 200, 255, 0.4));
+      margin: 12px 0;
+    }
+
+    .types {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .type-badge {
+      padding: 4px 16px;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+    }
+
+    .flavor {
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.75);
+      margin-bottom: 16px;
+      text-align: left;
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    .info-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 16px;
+    }
+
+    .stats {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.55);
+      width: 52px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .stat-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .stat-bar {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.6s ease;
+    }
+
+    .stat-val {
+      font-size: 0.72rem;
+      width: 28px;
+      text-align: right;
+      color: rgba(255,255,255,0.8);
+      flex-shrink: 0;
+    }
+
+    .btn {
+      margin-top: 8px;
+      padding: 12px 36px;
+      background: linear-gradient(135deg, #4f8ef7, #8b5cf6);
+      border: none;
+      border-radius: 99px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 16px rgba(79, 142, 247, 0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79, 142, 247, 0.5); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+    .error {
+      color: #ff6b6b;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔴 ランダムポケモン図鑑</h1>
+  <div class="card" id="card">
+    <p>読み込み中…</p>
+  </div>
+  <button class="btn" id="btn" onclick="load()" style="margin-top:20px">次のポケモン ▶</button>
+
+  <script>
+    const TYPE_JA = {
+      normal:'ノーマル', fire:'ほのお', water:'みず', electric:'でんき',
+      grass:'くさ', ice:'こおり', fighting:'かくとう', poison:'どく',
+      ground:'じめん', flying:'ひこう', psychic:'エスパー', bug:'むし',
+      rock:'いわ', ghost:'ゴースト', dragon:'ドラゴン', dark:'あく',
+      steel:'はがね', fairy:'フェアリー'
+    };
+    const TYPE_COLOR = {
+      normal:'#A8A878', fire:'#F08030', water:'#6890F0', electric:'#F8D030',
+      grass:'#78C850', ice:'#98D8D8', fighting:'#C03028', poison:'#A040A0',
+      ground:'#E0C068', flying:'#A890F0', psychic:'#F85888', bug:'#A8B820',
+      rock:'#B8A038', ghost:'#705898', dragon:'#7038F8', dark:'#705848',
+      steel:'#B8B8D0', fairy:'#EE99AC'
+    };
+    const STAT_JA = {
+      hp:'HP', attack:'こうげき', defense:'ぼうぎょ',
+      'special-attack':'とくこう', 'special-defense':'とくぼう', speed:'すばやさ'
+    };
+    const STAT_COLOR = {
+      hp:'#FF5959', attack:'#F5AC78', defense:'#FAE078',
+      'special-attack':'#9DB7F5', 'special-defense':'#A7DB8D', speed:'#FA92B2'
+    };
+
+    async function load() {
+      const card = document.getElementById('card');
+      const btn = document.getElementById('btn');
+      card.classList.add('loading');
+      btn.disabled = true;
+      card.innerHTML = '<p>読み込み中…</p>';
+
+      try {
+        const id = Math.floor(Math.random() * 1025) + 1;
+        const [poke, species] = await Promise.all([
+          fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r => r.json()),
+          fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`).then(r => r.json())
+        ]);
+
+        const nameJa = species.names.find(n => n.language.name === 'ja-Hrkt')?.name
+                    || species.names.find(n => n.language.name === 'ja')?.name
+                    || poke.name;
+
+        const flavorEntry = species.flavor_text_entries
+          .filter(e => e.language.name === 'ja')
+          .pop();
+        const flavor = flavorEntry
+          ? flavorEntry.flavor_text.replace(/\f|\n/g, ' ')
+          : '説明なし';
+
+        const img = poke.sprites.other?.['official-artwork']?.front_default
+                 || poke.sprites.front_default
+                 || '';
+
+        const types = poke.types.map(t => t.type.name);
+        const stats = poke.stats;
+        const height = (poke.height / 10).toFixed(1);
+        const weight = (poke.weight / 10).toFixed(1);
+
+        const typeBadges = types.map(t =>
+          `<span class="type-badge" style="background:${TYPE_COLOR[t] || '#888'}">${TYPE_JA[t] || t}</span>`
+        ).join('');
+
+        const statBars = stats.map(s => {
+          const key = s.stat.name;
+          const val = s.base_stat;
+          const pct = Math.min(100, (val / 255) * 100).toFixed(1);
+          const color = STAT_COLOR[key] || '#aaa';
+          return `<div class="stat-row">
+            <span class="stat-label">${STAT_JA[key] || key}</span>
+            <div class="stat-bar-bg"><div class="stat-bar" style="width:${pct}%;background:${color}"></div></div>
+            <span class="stat-val">${val}</span>
+          </div>`;
+        }).join('');
+
+        card.innerHTML = `
+          <div class="pokemon-id">No.${String(id).padStart(4,'0')}</div>
+          <div class="pokemon-name">${nameJa}</div>
+          ${img ? `<img class="pokemon-img" src="${img}" alt="${nameJa}">` : ''}
+          <div class="types">${typeBadges}</div>
+          <div class="info-row">
+            <span>高さ ${height} m</span>
+            <span>重さ ${weight} kg</span>
+          </div>
+          <div class="flavor">${flavor}</div>
+          <div class="stats">${statBars}</div>
+        `;
+      } catch(e) {
+        card.innerHTML = `<p class="error">読み込み失敗。もう一度試してください。</p>`;
+      }
+
+      card.classList.remove('loading');
+      btn.disabled = false;
+    }
+
+    load();
+  </script>
+</body>
+</html>
